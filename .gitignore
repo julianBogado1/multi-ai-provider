@@ -1,0 +1,22 @@
+# Secrets
+# Real keys live here; .env.example is the committed template.
+.env
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+*.iml
+*.iws
+# IntelliJ compiler output — Maven builds into target/, this is the IDE's own.
+out/
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/

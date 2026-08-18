@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: multi-ai-provider
+
+ai:
+  mock:
+    # The completions-mock-api FastAPI app (sibling repo), `uvicorn main:app`.
+    base-url: ${MOCK_AI_BASE_URL:http://localhost:8000}

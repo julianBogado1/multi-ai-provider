@@ -1,0 +1,66 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>multiai</groupId>
+        <artifactId>multi-ai-provider</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>ai</artifactId>
+    <name>ai</name>
+    <packaging>jar</packaging>
+    <description>
+        Base Spring AI library: a ChatModel implementation backed by the local
+        completions mock API, wired through a Boot auto-configuration so that
+        depending on this jar is the whole integration.
+    </description>
+
+    <dependencies>
+        <!--
+          spring-boot-autoconfigure, not spring-boot-starter: a library contributes
+          configuration, it does not impose a logging implementation or a servlet
+          stack on whoever depends on it. The consuming application picks those.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ChatModel, Prompt, ChatResponse and the ChatClient fluent API. -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-client-chat</artifactId>
+        </dependency>
+
+        <!-- RestClient, the HTTP client behind the mock-API call. -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+        <!-- Jackson 3, so RestClient can read/write the JSON bodies. -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
