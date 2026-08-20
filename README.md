@@ -30,18 +30,46 @@ aplicación lo reemplaza sin tocar el módulo.
 Requiere **JDK 25** (el build lo verifica con `maven-enforcer-plugin` y falla
 si `JAVA_HOME` apunta a otra versión).
 
-La mock API vive en el repo hermano `competions-mock-api` (FastAPI). Se
-levanta en el puerto 8000:
+```bash
+mvn verify   # build + tests de los dos módulos
+```
+
+## Entornos y correr
+
+La app hace una llamada de prueba al arrancar (en el `main`). Contra qué mock
+API la hace lo decide el perfil de Spring, exportado como variable de entorno:
+
+| Entorno | `SPRING_PROFILES_ACTIVE` | Mock API |
+| --- | --- | --- |
+| prod (default) | — (o `prod`) | `https://competions-mock-api.vercel.app` |
+| local | `local` | `http://localhost:8000` |
+
+**Prod (default)** — pega a la mock API hosteada en Vercel, no requiere nada
+corriendo local:
+
+```bash
+mvn -q package -DskipTests
+java -jar boot/target/boot-1.0-SNAPSHOT.jar
+```
+
+**Local** — primero levantá la mock API del repo hermano `competions-mock-api`
+(FastAPI, puerto 8000) y después la app con el perfil `local`:
 
 ```bash
 cd ../competions-mock-api
-.venv/bin/uvicorn main:app --port 8000
+.venv/bin/uvicorn main:app --port 8000 &
+cd ../multi-ai-provider
+
+export SPRING_PROFILES_ACTIVE=local
+java -jar boot/target/boot-1.0-SNAPSHOT.jar
 ```
 
-## Correr
+Para apuntar a cualquier otra URL sin tocar perfiles, la variable de entorno
+`MOCK_AI_BASE_URL` pisa el default del perfil activo:
 
 ```bash
-mvn verify   # build + tests de los dos módulos
+export MOCK_AI_BASE_URL=https://otra-instancia.example.com
+java -jar boot/target/boot-1.0-SNAPSHOT.jar
 ```
 
 ## Usar
@@ -65,6 +93,6 @@ public class MyService {
 }
 ```
 
-La URL de la mock API se configura con `ai.mock.base-url` en
-`boot/src/main/resources/application.yml` (o la variable de entorno
-`MOCK_AI_BASE_URL`).
+La URL de la mock API se configura con `ai.mock.base-url`:
+`boot/src/main/resources/application.yml` trae el default de prod (Vercel) y
+`application-local.yml` el del perfil `local` (localhost).

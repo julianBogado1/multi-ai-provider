@@ -2,6 +2,10 @@ package multiai.ai;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import multiai.infrastructure.web.MockAiApi;
+import multiai.domain.MockAiAutoConfiguration;
+import multiai.domain.MockAiChatModel;
+import multiai.domain.MockAiProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;

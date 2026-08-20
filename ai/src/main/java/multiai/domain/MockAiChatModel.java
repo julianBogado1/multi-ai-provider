@@ -1,7 +1,8 @@
-package multiai.ai;
+package multiai.domain;
 
 import java.util.List;
 
+import multiai.infrastructure.web.MockAiApi;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -27,7 +28,8 @@ public class MockAiChatModel implements ChatModel {
 
 	@Override
 	public ChatResponse call(final Prompt prompt) {
-		final var completion = this.api.complete(prompt.getContents());
+        final var completionRequest = new CompletionRequest(prompt.getContents());
+		final var completion = this.api.complete(completionRequest);
 		return new ChatResponse(List.of(new Generation(new AssistantMessage(completion.completion()))));
 	}
 }

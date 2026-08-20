@@ -1,5 +1,6 @@
-package multiai.ai;
+package multiai.domain;
 
+import multiai.infrastructure.web.MockAiApi;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

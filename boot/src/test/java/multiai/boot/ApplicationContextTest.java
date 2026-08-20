@@ -2,7 +2,7 @@ package multiai.boot;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import multiai.ai.MockAiChatModel;
+import multiai.domain.MockAiChatModel;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;

@@ -1,7 +1,9 @@
-package multiai.ai;
+package multiai.infrastructure.web;
 
 import java.net.http.HttpClient;
 
+import multiai.domain.CompletionRequest;
+import multiai.domain.CompletionResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -10,13 +12,11 @@ import org.springframework.web.client.RestClient;
  * Thin HTTP client for the completions mock API: {@code POST /completions}
  * with the prompt in the body, answered with {@code {"completion": "..."}}.
  */
-public class MockAiApi {
+public class MockAiApi implements MockAiCompletionApi{
 
 	private final RestClient restClient;
 
 	public MockAiApi(final String baseUrl) {
-		// HTTP/1.1 pinned: the JDK client's default h2c upgrade is not spoken by
-		// the plain-HTTP/1.1 servers this talks to (uvicorn, WireMock).
 		this(RestClient.builder()
 			.baseUrl(baseUrl)
 			.requestFactory(new JdkClientHttpRequestFactory(
@@ -28,17 +28,11 @@ public class MockAiApi {
 		this.restClient = restClient;
 	}
 
-	public record CompletionRequest(String prompt) {
-	}
-
-	public record CompletionResponse(String completion) {
-	}
-
-	public CompletionResponse complete(final String prompt) {
+	public CompletionResponse complete(CompletionRequest completionRequest) {
 		return this.restClient.post()
 			.uri("/completions")
 			.contentType(MediaType.APPLICATION_JSON)
-			.body(new CompletionRequest(prompt))
+			.body(new CompletionRequest(completionRequest.prompt()))
 			.retrieve()
 			.body(CompletionResponse.class);
 	}
