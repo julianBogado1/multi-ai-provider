@@ -1,9 +1,9 @@
-package multiai.infrastructure.web;
+package multiai.details.web;
 
 import java.net.http.HttpClient;
 
-import multiai.domain.CompletionRequest;
-import multiai.domain.CompletionResponse;
+import multiai.domain.models.CompletionRequest;
+import multiai.domain.models.CompletionResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;

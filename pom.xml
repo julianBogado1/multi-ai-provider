@@ -8,8 +8,8 @@
     <packaging>pom</packaging>
 
     <!--
-      ai   — the AI library: ChatModel implementation + Boot auto-configuration.
-      boot — the composition root, the only executable artifact.
+      ai   — the AI library: ChatModel implementation over the mock API.
+      boot — the web application, the only executable artifact.
     -->
     <modules>
         <module>ai</module>

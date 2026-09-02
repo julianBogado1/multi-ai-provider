@@ -13,27 +13,11 @@
     <name>ai</name>
     <packaging>jar</packaging>
     <description>
-        Base Spring AI library: a ChatModel implementation backed by the local
-        completions mock API, wired through a Boot auto-configuration so that
-        depending on this jar is the whole integration.
+        Base Spring AI library: a ChatModel implementation backed by the
+        completions mock API.
     </description>
 
     <dependencies>
-        <!--
-          spring-boot-autoconfigure, not spring-boot-starter: a library contributes
-          configuration, it does not impose a logging implementation or a servlet
-          stack on whoever depends on it. The consuming application picks those.
-        -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- ChatModel, Prompt, ChatResponse and the ChatClient fluent API. -->
         <dependency>
             <groupId>org.springframework.ai</groupId>

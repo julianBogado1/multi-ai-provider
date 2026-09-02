@@ -2,7 +2,8 @@ package multiai.domain;
 
 import java.util.List;
 
-import multiai.infrastructure.web.MockAiApi;
+import multiai.domain.models.CompletionRequest;
+import multiai.details.web.MockAiApi;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -15,8 +16,7 @@ import org.springframework.ai.chat.prompt.Prompt;
  * <p>
  * Because it implements the vendor-neutral port, everything built on top of a
  * {@code ChatModel} — {@code ChatClient}, advisors, structured output — works
- * against the mock exactly as it would against a real provider, and swapping in
- * a real one is a bean definition, not a rewrite.
+ * against the mock exactly as it would against a real provider.
  */
 public class MockAiChatModel implements ChatModel {
 

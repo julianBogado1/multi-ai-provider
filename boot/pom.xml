@@ -14,22 +14,13 @@
     <packaging>jar</packaging>
 
     <dependencies>
-        <!--
-          The ai module contributes its beans through its own
-          AutoConfiguration.imports entry — nothing here scans multiai.ai and
-          nothing here needs to. Depending on the jar is the integration.
-        -->
         <dependency>
             <groupId>multiai</groupId>
             <artifactId>ai</artifactId>
         </dependency>
-        <!--
-          Plain starter, no web stack: this application only makes outbound
-          requests through the ai module — it exposes no HTTP surface of its own.
-        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,98 +1,98 @@
 # multi-ai-provider
 
-Aplicación Spring Boot de dos módulos: `ai` es una librería que implementa el
-`ChatModel` de Spring AI contra una API mock de completions, y `boot` es la
-raíz de composición que la consume. El sistema solo hace requests salientes —
-no expone ningún endpoint HTTP propio.
-
-```
-ai      librería Spring AI — MockAiChatModel + auto-configuración
-boot    raíz de composición — el único artefacto ejecutable
-```
-
-El módulo `ai` no se escanea por componentes: aporta sus beans con una
-`@AutoConfiguration` registrada en
-`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
-Depender del jar *es* la integración completa. Los beans que publica:
-
-| Bean | Qué es |
-| --- | --- |
-| `MockAiProperties` | configuración (`ai.mock.base-url`) |
-| `MockAiApi` | cliente HTTP de la mock API (`POST /completions`) |
-| `MockAiChatModel` | la implementación de `ChatModel` |
-| `ChatClient` | la API fluida de Spring AI sobre ese `ChatModel` |
-
-Todos son `@ConditionalOnMissingBean`: declarar un `ChatModel` propio en la
-aplicación lo reemplaza sin tocar el módulo.
-
 ## Setup
 
-Requiere **JDK 25** (el build lo verifica con `maven-enforcer-plugin` y falla
-si `JAVA_HOME` apunta a otra versión).
+Requires **JDK 25**.
 
 ```bash
-mvn verify   # build + tests de los dos módulos
+mvn verify   # build + tests for both modules
 ```
 
-## Entornos y correr
+## Running
 
-La app hace una llamada de prueba al arrancar (en el `main`). Contra qué mock
-API la hace lo decide el perfil de Spring, exportado como variable de entorno:
-
-| Entorno | `SPRING_PROFILES_ACTIVE` | Mock API |
-| --- | --- | --- |
-| prod (default) | — (o `prod`) | `https://competions-mock-api.vercel.app` |
-| local | `local` | `http://localhost:8000` |
-
-**Prod (default)** — pega a la mock API hosteada en Vercel, no requiere nada
-corriendo local:
+The mock API base URL is hardcoded in `CompletionController`
+(`https://competions-mock-api.vercel.app`), so nothing needs to run locally. To
+hit a local mock instead, change the literal there and rebuild.
 
 ```bash
 mvn -q package -DskipTests
 java -jar boot/target/boot-1.0-SNAPSHOT.jar
 ```
 
-**Local** — primero levantá la mock API del repo hermano `competions-mock-api`
-(FastAPI, puerto 8000) y después la app con el perfil `local`:
+To run the sibling `competions-mock-api` (FastAPI, port 8000) locally:
 
 ```bash
 cd ../competions-mock-api
-.venv/bin/uvicorn main:app --port 8000 &
-cd ../multi-ai-provider
-
-export SPRING_PROFILES_ACTIVE=local
-java -jar boot/target/boot-1.0-SNAPSHOT.jar
+.venv/bin/uvicorn main:app --port 8000
 ```
 
-Para apuntar a cualquier otra URL sin tocar perfiles, la variable de entorno
-`MOCK_AI_BASE_URL` pisa el default del perfil activo:
+## Usage
+
+The app listens on `http://localhost:8080` and exposes `POST /completions`:
 
 ```bash
-export MOCK_AI_BASE_URL=https://otra-instancia.example.com
-java -jar boot/target/boot-1.0-SNAPSHOT.jar
+curl -X POST http://localhost:8080/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt": "hola"}'
 ```
 
-## Usar
+```json
+{"completion": "..."}
+```
 
-No hay controllers: se consume inyectando el `ChatClient` (o el `ChatModel`)
-auto-configurado en cualquier bean de la aplicación:
+### Structured output
 
-```java
-@Component
-public class MyService {
+The mock API ignores the request body and answers with a fixed placeholder
+unless you pass `?schema=true`, in which case the body itself is a JSON Schema
+and the response is a random document that complies with it. The app's
+`/completions` does not forward that flag, so call the mock API directly:
 
-    private final ChatClient chatClient;
-
-    public MyService(final ChatClient chatClient) {
-        this.chatClient = chatClient;
+```bash
+curl -X POST 'https://competions-mock-api.vercel.app/completions?schema=true' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "type": "object",
+    "properties": {
+      "name": {"type": "string"},
+      "email": {"type": "string", "format": "email"},
+      "plan_interest": {"type": "string", "enum": ["basic", "pro", "enterprise"]},
+      "address": {"$ref": "#/$defs/Address"}
+    },
+    "required": ["name", "email", "plan_interest"],
+    "$defs": {
+      "Address": {
+        "type": "object",
+        "properties": {
+          "city": {"type": "string"},
+          "zip_code": {"type": "integer"}
+        }
+      }
     }
+  }'
+```
 
-    public String ask(final String prompt) {
-        return this.chatClient.prompt().user(prompt).call().content();
-    }
+```json
+{
+  "name": "srtlmnspdp",
+  "email": "nketojmh@example.com",
+  "plan_interest": "enterprise",
+  "address": {"city": "blfhlhtguq", "zip_code": 465}
 }
 ```
 
-La URL de la mock API se configura con `ai.mock.base-url`:
-`boot/src/main/resources/application.yml` trae el default de prod (Vercel) y
-`application-local.yml` el del perfil `local` (localhost).
+Supported schema nodes: `object`, `array`, `string` (with `format`: `date-time`,
+`date`, `time`, `email`, `uri`, `uuid`, `ipv4`, `ipv6`), `integer`, `number`,
+`boolean`, `null`, plus `const`, `enum`, `anyOf`, `oneOf`, `allOf` and internal
+`#/$defs/<name>` refs. Nesting deeper than 20 levels is rejected.
+
+### From code
+
+Construct the model explicitly wherever you need it:
+
+```java
+final var chatModel = new MockAiChatModel(
+    new MockAiApi("https://competions-mock-api.vercel.app"));
+
+final var text = chatModel.call(new Prompt("hola"))
+    .getResult().getOutput().getText();
+```
