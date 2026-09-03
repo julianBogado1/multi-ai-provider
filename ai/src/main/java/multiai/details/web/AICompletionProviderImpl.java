@@ -12,11 +12,17 @@ import org.springframework.web.client.RestClient;
  * Thin HTTP client for the completions mock API: {@code POST /completions}
  * with the prompt in the body, answered with {@code {"completion": "..."}}.
  */
-public class MockAiApi implements MockAiCompletionApi{
+public class AICompletionProviderImpl implements AICompletionProvider {
+
+	public static final String PRODUCTION_BASE_URL = "https://competions-mock-api.vercel.app";
 
 	private final RestClient restClient;
 
-	public MockAiApi(final String baseUrl) {
+	public AICompletionProviderImpl() {
+		this(PRODUCTION_BASE_URL);
+	}
+
+	public AICompletionProviderImpl(final String baseUrl) {
 		this(RestClient.builder()
 			.baseUrl(baseUrl)
 			.requestFactory(new JdkClientHttpRequestFactory(
@@ -24,7 +30,7 @@ public class MockAiApi implements MockAiCompletionApi{
 			.build());
 	}
 
-	public MockAiApi(final RestClient restClient) {
+	public AICompletionProviderImpl(final RestClient restClient) {
 		this.restClient = restClient;
 	}
 

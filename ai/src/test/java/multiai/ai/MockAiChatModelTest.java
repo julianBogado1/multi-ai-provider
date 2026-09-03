@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import multiai.details.web.MockAiApi;
+import multiai.details.web.AICompletionProviderImpl;
 import multiai.domain.MockAiChatModel;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -40,7 +40,7 @@ class MockAiChatModelTest {
 	@Test
 	void call_posts_the_prompt_and_maps_the_completion() {
 		server.stubFor(post(urlEqualTo("/completions")).willReturn(okJson("{\"completion\": \"hola mundo\"}")));
-		final var model = new MockAiChatModel(new MockAiApi(server.baseUrl()));
+		final var model = new MockAiChatModel(new AICompletionProviderImpl(server.baseUrl()));
 
 		final var response = model.call(new Prompt("decime hola"));
 

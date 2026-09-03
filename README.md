@@ -28,7 +28,27 @@ cd ../competions-mock-api
 
 ## Usage
 
-The app listens on `http://localhost:8080` and exposes `POST /completions`:
+The app listens on `http://localhost:8080`.
+
+### `GET /help`
+
+Lists the chat models the orchestrator can route to:
+
+```bash
+curl http://localhost:8080/help
+```
+
+```json
+{
+  "supportedModels": ["OpenAI", "Anthropic", "AWSBedrock", "OLlama"],
+  "defaultModel": "mock",
+  "usage": "POST /completions?model=<model> with body {\"prompt\": \"...\"}"
+}
+```
+
+### `POST /completions`
+
+Without `?model=` the request goes to the default `MockAiChatModel`:
 
 ```bash
 curl -X POST http://localhost:8080/completions \
@@ -39,6 +59,19 @@ curl -X POST http://localhost:8080/completions \
 ```json
 {"completion": "..."}
 ```
+
+With `?model=` the orchestrator resolves the name to a chat model and that one
+runs the completion:
+
+```bash
+curl -X POST 'http://localhost:8080/completions?model=OpenAI' \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt": "hola"}'
+```
+
+An unknown name answers `400` with the supported list in the message. Every
+model currently talks to the same mock API, so the completion text is identical
+whichever one you pick.
 
 ### Structured output
 
