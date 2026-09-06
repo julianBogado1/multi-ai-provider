@@ -6,7 +6,7 @@ import multiai.domain.interfaces.models.DomainChatModel;
 
 public interface ChatModelOrchestrator {
 
-    DomainChatModel getChatModel(String chatModel);
+    DomainChatModel getChatModel();
 
     Set<String> getSupportedChatModels();
 }
