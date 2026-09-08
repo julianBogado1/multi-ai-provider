@@ -10,7 +10,7 @@ mvn verify   # build + tests for both modules
 
 ## Running
 
-The mock API base URL is hardcoded in `CompletionController`
+The mock API base URL is hardcoded in `MockAiApi`
 (`https://competions-mock-api.vercel.app`), so nothing needs to run locally. To
 hit a local mock instead, change the literal there and rebuild.
 
@@ -28,27 +28,18 @@ cd ../competions-mock-api
 
 ## Usage
 
-The app listens on `http://localhost:8080` and exposes `POST /completions`:
+The app listens on `http://localhost:8080`.
+
+**Only structured output is supported.** Every completion is a JSON Schema sent
+as the request body; there is no plain-prompt mode.
+
+### Run the use case
+
+Copy-paste this once the app is running — it sends a JSON Schema and prints a
+document that complies with it:
 
 ```bash
-curl -X POST http://localhost:8080/completions \
-  -H 'Content-Type: application/json' \
-  -d '{"prompt": "hola"}'
-```
-
-```json
-{"completion": "..."}
-```
-
-### Structured output
-
-The mock API ignores the request body and answers with a fixed placeholder
-unless you pass `?schema=true`, in which case the body itself is a JSON Schema
-and the response is a random document that complies with it. The app's
-`/completions` does not forward that flag, so call the mock API directly:
-
-```bash
-curl -X POST 'https://competions-mock-api.vercel.app/completions?schema=true' \
+curl -s -X POST 'http://localhost:8080/completions?schema=true' \
   -H 'Content-Type: application/json' \
   -d '{
     "type": "object",
@@ -80,19 +71,76 @@ curl -X POST 'https://competions-mock-api.vercel.app/completions?schema=true' \
 }
 ```
 
+### `GET /help`
+
+Lists the chat model behind the endpoint and how to call it:
+
+```bash
+curl http://localhost:8080/help
+```
+
+```json
+{
+  "supportedModels": ["mock"],
+  "defaultModel": "mock",
+  "usage": "POST /completions?schema=true with a JSON Schema as the body. Only structured output is supported."
+}
+```
+
+### `POST /completions?schema=true`
+
+Send a JSON Schema as the body. `MockAiChatModel` forwards it to the mock API
+and the answer is a document that complies with the schema — the call shown in
+[Run the use case](#run-the-use-case).
+
+The same call against the mock API directly, skipping the app:
+
+```bash
+curl -X POST 'https://competions-mock-api.vercel.app/completions?schema=true' \
+  -H 'Content-Type: application/json' \
+  -d '{"type": "object", "properties": {"name": {"type": "string"}}}'
+```
+
 Supported schema nodes: `object`, `array`, `string` (with `format`: `date-time`,
 `date`, `time`, `email`, `uri`, `uuid`, `ipv4`, `ipv6`), `integer`, `number`,
 `boolean`, `null`, plus `const`, `enum`, `anyOf`, `oneOf`, `allOf` and internal
 `#/$defs/<name>` refs. Nesting deeper than 20 levels is rejected.
 
+### `POST /completions` without `schema=true`
+
+Structured output is the only supported mode, so a request that omits the query
+param — or sends `?schema=false` or `?schema=` — is rejected with `400` and the
+usage instructions:
+
+```bash
+curl -i -X POST http://localhost:8080/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt": "hola"}'
+```
+
+```
+HTTP/1.1 400 Bad Request
+```
+
+```json
+{
+  "supportedModels": ["mock"],
+  "defaultModel": "mock",
+  "usage": "POST /completions?schema=true with a JSON Schema as the body. Only structured output is supported."
+}
+```
+
 ### From code
 
-Construct the model explicitly wherever you need it:
+The schema is carried as the prompt, so the model is driven through the plain
+Spring AI `ChatModel` contract — one method, no schema-specific overload:
 
 ```java
 final var chatModel = new MockAiChatModel(
     new MockAiApi("https://competions-mock-api.vercel.app"));
 
-final var text = chatModel.call(new Prompt("hola"))
+final var document = chatModel.call(new Prompt("""
+        {"type": "object", "properties": {"name": {"type": "string"}}}
+        """))
     .getResult().getOutput().getText();
 ```
