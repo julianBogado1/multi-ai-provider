@@ -9,8 +9,12 @@ import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 /**
- * Thin HTTP client for the completions mock API: {@code POST /completions}
- * with the prompt in the body, answered with {@code {"completion": "..."}}.
+ * Thin HTTP client for the completions mock API: {@code POST /completions?schema=true}
+ * with a JSON Schema as the body, answered with a document that complies with it.
+ *
+ * <p>
+ * Only structured output is supported, so the prompt carried by the
+ * {@link CompletionRequest} is always the schema itself.
  */
 public class AICompletionProviderImpl implements AICompletionProvider {
 
@@ -34,12 +38,14 @@ public class AICompletionProviderImpl implements AICompletionProvider {
 		this.restClient = restClient;
 	}
 
-	public CompletionResponse complete(CompletionRequest completionRequest) {
-		return this.restClient.post()
-			.uri("/completions")
+	@Override
+	public CompletionResponse complete(final CompletionRequest completionRequest) {
+		final String document = this.restClient.post()
+			.uri(uriBuilder -> uriBuilder.path("/completions").queryParam("schema", true).build())
 			.contentType(MediaType.APPLICATION_JSON)
-			.body(new CompletionRequest(completionRequest.prompt()))
+			.body(completionRequest.prompt())
 			.retrieve()
-			.body(CompletionResponse.class);
+			.body(String.class);
+		return new CompletionResponse(document);
 	}
 }
